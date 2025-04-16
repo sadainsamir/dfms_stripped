@@ -4,11 +4,18 @@ import numpy as np
 import mediapipe as mp
 import time
 import winsound
+
+#mediaPipe task imports
 from mediapipe.tasks.python import BaseOptions
 from mediapipe.tasks.python.vision.face_landmarker import (
     FaceLandmarker,
     FaceLandmarkerOptions
 )
+from mediapipe.framework.formats import landmark_pb2
+
+#drawing utils from MediaPipe 
+mp_drawing = mp.solutions.drawing_utils
+mp_face_mesh = mp.solutions.face_mesh
 
 # Path to the face_landmarker.task model
 model_path = r"C:\Users\sadai\Downloads\face_landmarker (1).task"
@@ -42,7 +49,29 @@ with face_landmarker:
 
         # Use synchronous detection
         result = face_landmarker.detect(mp_image)
+        
+        #custom faceLandmark style
+        landmark_style = mp_drawing.DrawingSpec(color=(200, 0, 255), thickness=1, circle_radius=1)
+        connection_style = mp_drawing.DrawingSpec(color=(0, 255, 255), thickness=1)
 
+        
+        #draw face landmark
+        if result and result.face_landmarks:
+            for face_landmarks in result.face_landmarks:
+        # Convert to protobuf-compatible format
+                landmark_list = landmark_pb2.NormalizedLandmarkList()
+            for lm in face_landmarks:
+                landmark_list.landmark.append(
+                    landmark_pb2.NormalizedLandmark(x=lm.x, y=lm.y, z=lm.z)
+            )        
+        #drawing the mesh
+            mp_drawing.draw_landmarks(
+                image = frame,
+                landmark_list = landmark_list,
+                connections = mp_face_mesh.FACEMESH_TESSELATION,
+                landmark_drawing_spec = landmark_style,
+                connection_drawing_spec = connection_style     
+                )
         # Get the blendshapes and print eye blinks
         if result and result.face_blendshapes:
             for blendshape in result.face_blendshapes[0]:
@@ -59,4 +88,4 @@ with face_landmarker:
 
 
 cap.release()
-cv2.destroyAllWindows()
+cv2.destroyAllWindows() 
